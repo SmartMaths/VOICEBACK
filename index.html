@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="VOICEBACK sign recognition and speech prototype">
+<title>VOICEBACK — Your Hands, Your Voice</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #06101d;
+  --panel: #0d1d2f;
+  --line: rgba(150,195,225,.18);
+  --text: #eff8ff;
+  --muted: #9db2c8;
+  --cyan: #67e8f9;
+  --blue: #8bb6ff;
+  --green: #67e6b1;
+  --radius: 22px;
+  --shadow: 0 22px 65px #0005;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  background:
+    radial-gradient(ellipse at 12% -8%, #1b617c55, transparent 42%),
+    radial-gradient(ellipse at 100% 15%, #4359be22, transparent 35%),
+    var(--bg);
+}
+
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid #a5f3fc; outline-offset: 3px; }
+[hidden] { display: none !important; }
+
+.shell { width: min(1160px, calc(100% - 36px)); margin: auto; }
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 21px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--cyan), var(--blue));
+  color: #06101d;
+  font-size: 23px;
+}
+
+.logo { font-size: 21px; font-weight: 900; letter-spacing: 2px; }
+
+.brand-caption {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: #c4d6e8;
+  background: #0b1b2caa;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 12px #67e6b188;
+}
+
+.hero { text-align: center; padding: 65px 0 30px; }
+
+.eyebrow {
+  display: inline-block;
+  padding: 8px 13px;
+  border: 1px solid #67e8f933;
+  border-radius: 99px;
+  color: var(--cyan);
+  background: #67e8f90d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+h1 {
+  margin: 22px 0 15px;
+  font-size: clamp(40px, 7vw, 76px);
+  line-height: 1;
+  letter-spacing: -2.5px;
+}
+
+h1 span { color: var(--cyan); }
+
+.hero-copy {
+  max-width: 660px;
+  margin: auto;
+  color: #a9bed2;
+  font-size: clamp(14px, 2vw, 17px);
+  line-height: 1.8;
+}
+
+.chips {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.chip {
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: #b7cbe0;
+  background: #0d1d2f99;
+  font-size: 12px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0,1.2fr) minmax(300px,.8fr);
+  gap: 22px;
+  align-items: start;
+  padding: 20px 0 65px;
+}
+
+.panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #0d1d2fe8;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 23px 23px 17px;
+}
+
+.kicker {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+h2 { margin: 7px 0 0; font-size: 21px; }
+
+.panel-note {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.live-badge {
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  color: #b8cce0;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.camera-area { padding: 0 23px 23px; }
+
+.camera-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  overflow: hidden;
+  border: 1px solid #67e8f92d;
+  border-radius: 17px;
+  background:
+    linear-gradient(#67e8f908 1px, transparent 1px),
+    linear-gradient(90deg, #67e8f908 1px, transparent 1px),
+    #06121f;
+  background-size: 28px 28px;
+}
+
+#camera { display: none; }
+
+#handCanvas {
+  display: none;
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  object-fit: contain;
+}
+
+#cameraMessage {
+  z-index: 1;
+  padding: 28px 18px;
+  text-align: center;
+}
+
+.camera-symbol {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  border: 1px solid #67e8f92d;
+  border-radius: 22px;
+  background: #67e8f90d;
+  font-size: 34px;
+}
+
+.camera-title { font-weight: 800; }
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+#handStatus, #predictionResult {
+  width: 100%;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+#handStatus {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #05101c88;
+  color: #b8cee2;
+}
+
+#predictionResult { min-height: 36px; }
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 15px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  transition: transform .16s, background .16s;
+}
+
+.btn:hover { transform: translateY(-1px); }
+
+.btn-primary {
+  color: #05131f;
+  background: linear-gradient(135deg, var(--cyan), #91c9ff);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #a5f3fc, #b4d4ff);
+}
+
+.btn-secondary {
+  color: #e2effb;
+  border-color: var(--line);
+  background: #172b40;
+}
+
+.btn-secondary:hover { background: #203b56; }
+
+.btn:disabled { opacity: .65; cursor: wait; transform: none; }
+
+.output-content { padding: 0 22px 22px; }
+
+.output-card {
+  padding: 21px;
+  border: 1px solid #67e8f92b;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #091d2df2, #071320);
+}
+
+.output-label {
+  color: #8da9c1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+#message {
+  display: flex;
+  align-items: center;
+  min-height: 70px;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+  color: var(--cyan);
+  font-size: clamp(23px, 3vw, 34px);
+  font-weight: 850;
+  letter-spacing: -.7px;
+}
+
+.output-help {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.output-actions { display: grid; gap: 10px; margin-top: 13px; }
+.divider { height: 1px; margin: 22px 0; background: var(--line); }
+.steps-title { margin-bottom: 13px; font-size: 13px; font-weight: 800; }
+.steps { display: grid; gap: 13px; }
+.step { display: flex; gap: 11px; align-items: flex-start; }
+
+.step-num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: var(--cyan);
+  background: #67e8f915;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.step strong { display: block; margin: 1px 0 4px; font-size: 12px; }
+
+.step span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.notice {
+  padding: 12px 13px;
+  border: 1px solid #75a7ff2b;
+  border-radius: 12px;
+  color: #a9c0d8;
+  background: #75a7ff0d;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+footer {
+  padding: 23px 18px 32px;
+  border-top: 1px solid var(--line);
+  color: #718ba5;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+footer strong { color: #a6bdd3; }
+
+/* Welcome popup — no cross button */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #020811d1;
+  backdrop-filter: blur(14px);
+}
+
+.welcome-overlay.hidden { display: none; }
+
+.welcome-box {
+  width: min(460px,100%);
+  padding: 38px 30px 30px;
+  text-align: center;
+  border: 1px solid #67e8f942;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top, #286f9238, transparent 55%),
+    #0b1b2c;
+  box-shadow: 0 28px 100px #0009;
+  animation: welcomeIn .35s ease-out both;
+}
+
+.welcome-icon {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 18px;
+  border: 1px solid #67e8f933;
+  border-radius: 22px;
+  background: #67e8f912;
+  font-size: 34px;
+}
+
+.welcome-tag {
+  margin: 0;
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+
+.welcome-box h2 {
+  margin: 10px 0;
+  font-size: 34px;
+  letter-spacing: 2px;
+}
+
+.welcome-message { margin: 0; font-size: 19px; font-weight: 800; }
+
+.welcome-description {
+  max-width: 340px;
+  margin: 13px auto 22px;
+  color: #a9bed2;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+@keyframes welcomeIn {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 820px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    max-width: 680px;
+    margin: auto;
+  }
+  .hero { padding-top: 52px; }
+  .camera-frame { min-height: 260px; }
+  #handCanvas { max-height: 400px; }
+}
+
+@media (max-width: 520px) {
+  .shell { width: calc(100% - 24px); }
+  header { padding: 15px 0; }
+  .logo { font-size: 18px; }
+  .brand-mark { width: 39px; height: 39px; }
+  .brand-caption { font-size: 9px; }
+  .status-pill { padding: 8px; font-size: 9px; letter-spacing: .5px; }
+  .hero { padding: 44px 0 22px; }
+  h1 { letter-spacing: -1.7px; }
+  .hero-copy { font-size: 14px; }
+  .workspace { padding-top: 12px; gap: 15px; }
+  .panel-head { padding: 19px 16px 15px; }
+  .camera-area { padding: 0 14px 16px; }
+  .camera-frame { min-height: 230px; }
+  .actions { grid-template-columns: 1fr; }
+  .output-content { padding: 0 14px 16px; }
+  .welcome-box { padding: 32px 22px 24px; }
+  .welcome-box h2 { font-size: 29px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="welcomeOverlay" class="welcome-overlay">
+  <section class="welcome-box" role="dialog" aria-modal="true"
+    aria-labelledby="welcomeTitle" aria-describedby="welcomeDescription">
+    <div class="welcome-icon" aria-hidden="true">👋</div>
+    <p class="welcome-tag">WELCOME TO</p>
+    <h2 id="welcomeTitle">VOICEBACK</h2>
+    <p class="welcome-message">Your hands, your voice.</p>
+    <p id="welcomeDescription" class="welcome-description">
+      An accessibility project using computer vision to recognize selected
+      Indian Sign Language signs and speak them aloud.
+    </p>
+    <button id="welcomeContinue" class="btn btn-primary" type="button">
+      LET'S BEGIN <span aria-hidden="true">→</span>
+    </button>
+  </section>
+</div>
+
+<header class="shell">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">✋</div>
+    <div>
+      <div class="logo">VOICEBACK<span style="color:var(--cyan)">.</span></div>
+      <div class="brand-caption">YOUR HANDS. YOUR VOICE.</div>
+    </div>
+  </div>
+  <div class="status-pill">
+    <span class="dot" aria-hidden="true"></span> ACCESSIBILITY PROJECT
+  </div>
+</header>
+
+<main class="shell">
+  <section class="hero">
+    <div class="eyebrow">✦ AI + COMPUTER VISION</div>
+    <h1>Communication,<br><span>without barriers.</span></h1>
+    <p class="hero-copy">
+      VOICEBACK explores how computer vision can recognize selected Indian
+      Sign Language signs and turn them into spoken words.
+    </p>
+    <div class="chips">
+      <span class="chip">⌁ Live hand tracking</span>
+      <span class="chip">◖ Sign recognition</span>
+      <span class="chip">♫ Speech output</span>
+    </div>
+  </section>
+
+  <section class="workspace" aria-label="VOICEBACK sign recognition workspace">
+
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="kicker">Live camera</div>
+          <h2>Sign recognition</h2>
+          <div class="panel-note">
+            Position your hand clearly in the camera view and hold a sign steady.
+          </div>
+        </div>
+        <div class="live-badge">● CAMERA</div>
+      </div>
+
+      <div class="camera-area">
+        <div class="camera-frame">
+          <video id="camera" autoplay playsinline muted></video>
+          <canvas id="handCanvas"
+            aria-label="Mirrored camera preview with hand landmarks"></canvas>
+
+          <div id="cameraMessage">
+            <div class="camera-symbol" aria-hidden="true">📷</div>
+            <div class="camera-title">Your camera is ready</div>
+            <p class="muted">Start the camera to begin the live sign-recognition demo.</p>
+          </div>
+        </div>
+
+        <div id="handStatus" role="status" aria-live="polite">
+          AI vision is waiting for the camera…
+        </div>
+        <div id="predictionResult" class="muted" role="status" aria-live="polite">
+          Waiting for a hand sign…
+        </div>
+
+        <div class="actions">
+          <button id="startCamera" class="btn btn-primary" type="button">
+            ▶ Start camera
+          </button>
+          <button id="stopCamera" class="btn btn-secondary" type="button" hidden>
+            ■ Stop camera
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="kicker">Speech output</div>
+          <h2>Recognized message</h2>
+          <div class="panel-note">
+            New predictions are spoken automatically when the recognized label changes.
+          </div>
+        </div>
+      </div>
+
+      <div class="output-content">
+        <div class="output-card">
+          <div class="output-label">VOICE OUTPUT</div>
+          <div id="message" aria-live="polite" aria-atomic="true">
+            Ready to communicate
+          </div>
+          <div class="output-help">Use Replay to hear the latest recognized sign again.</div>
+        </div>
+
+        <div class="output-actions">
+          <button id="speakButton" class="btn btn-primary" type="button">
+            🔊 Replay recognized sign
+          </button>
+          <button id="resetButton" class="btn btn-secondary" type="button">
+            ↺ Reset message
+          </button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="steps-title">How to use VOICEBACK</div>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">01</div>
+            <div><strong>Start the camera</strong>
+              <span>Allow camera access when your browser asks.</span></div>
+          </div>
+          <div class="step">
+            <div class="step-num">02</div>
+            <div><strong>Show a supported sign</strong>
+              <span>Keep your hand visible and hold the sign steadily.</span></div>
+          </div>
+          <div class="step">
+            <div class="step-num">03</div>
+            <div><strong>Listen to the output</strong>
+              <span>The predicted word appears here and is spoken aloud.</span></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="notice">
+          <strong>Demo note:</strong> This student prototype recognizes a limited
+          set of trained signs. Predictions may be incorrect; it is not a
+          substitute for a qualified interpreter.
+        </div>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<footer>
+  <strong>VOICEBACK</strong> · Student AI &amp; Robotics Exhibition Project<br>
+  Built to explore more accessible communication through technology.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+
+<script>
+"use strict";
+
+// LOCAL TESTING ONLY.
+// For hosted deployment, replace this with your hosted backend URL.
+const API_URL = "http://127.0.0.1:5000/predict";
+const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_INTERVAL_MS = 300;
+const RETRY_DELAY_MS = 2000;
+
+const video = document.getElementById("camera");
+const canvas = document.getElementById("handCanvas");
+const ctx = canvas.getContext("2d");
+const handStatus = document.getElementById("handStatus");
+const predictionResult = document.getElementById("predictionResult");
+const cameraMessage = document.getElementById("cameraMessage");
+const startButton = document.getElementById("startCamera");
+const stopButton = document.getElementById("stopCamera");
+const messageOutput = document.getElementById("message");
+const welcomeOverlay = document.getElementById("welcomeOverlay");
+const welcomeContinue = document.getElementById("welcomeContinue");
+
+let cameraStream = null;
+let handTracker = null;
+let trackingActive = false;
+let cameraStarting = false;
+let processingFrame = false;
+let predictionInProgress = false;
+let animationFrameId = null;
+let lastHandFrame = 0;
+let lastPredictionRequest = 0;
+let nextRetryTime = 0;
+let trackingSession = 0;
+let requestCounter = 0;
+let activeRequestId = null;
+let activeController = null;
+let hasReceivedPrediction = false;
+let lastSuccessfulPrediction = "";
+let lastSpokenPrediction = "";
+
+// Close welcome and trigger the existing Start Camera button.
+welcomeContinue.addEventListener("click", () => {
+  welcomeOverlay.classList.add("hidden");
+  startButton.click();
+});
+
+// Speak HELP three times sequentially; all other signs once.
+function speakWord(word) {
+  if (!("speechSynthesis" in window) || !word) return;
+
+  const repeatCount = word.trim().toLowerCase() === "help" ? 3 : 1;
+  const phrase = repeatCount === 3 ? "HELP" : word;
+  let count = 0;
+
+  function speakNext() {
+    if (count >= repeatCount) return;
+    count++;
+
+    const utterance = new SpeechSynthesisUtterance(phrase);
+    utterance.lang = "en-IN";
+    utterance.rate = 0.9;
+    utterance.volume = 1;
+
+    utterance.onend = () => {
+      if (count < repeatCount) speakNext();
+    };
+
+    utterance.onerror = event => {
+      console.error("VOICEBACK speech error:", event.error);
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  speakNext();
+}
+
+// Automatically speak a new prediction only when its label changes.
+function speakPrediction(word) {
+  if (!("speechSynthesis" in window)) {
+    console.warn("VOICEBACK: Speech is not supported.");
+    return;
+  }
+
+  if (!word || word === lastSpokenPrediction) return;
+
+  lastSpokenPrediction = word;
+  messageOutput.textContent = "Recognized: " + word;
+  window.speechSynthesis.cancel();
+
+  console.log("VOICEBACK speech:", {
+    word,
+    repeatCount: word.trim().toLowerCase() === "help" ? 3 : 1
+  });
+
+  speakWord(word);
+}
+
+document.getElementById("speakButton").addEventListener("click", speakMessage);
+document.getElementById("resetButton").addEventListener("click", resetMessage);
+startButton.addEventListener("click", startCamera);
+stopButton.addEventListener("click", stopCamera);
+
+function speakMessage() {
+  if (!lastSpokenPrediction) {
+    messageOutput.textContent = "No sign recognized yet.";
+    return;
+  }
+
+  if (!("speechSynthesis" in window)) {
+    messageOutput.textContent = "Speech is not supported in this browser.";
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  messageOutput.textContent = "Replaying: " + lastSpokenPrediction;
+  speakWord(lastSpokenPrediction);
+}
+
+function resetMessage() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  lastSpokenPrediction = "";
+  messageOutput.textContent = "Ready to communicate";
+}
+
+function waitForVideo() {
+  if (video.readyState >= 2 && video.videoWidth > 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("The camera video did not become ready."));
+    }, 10000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      video.removeEventListener("loadeddata", onReady);
+      video.removeEventListener("error", onError);
+    }
+
+    function onReady() {
+      cleanup();
+      resolve();
+    }
+
+    function onError() {
+      cleanup();
+      reject(new Error("The browser could not read the camera video."));
+    }
+
+    video.addEventListener("loadeddata", onReady, { once: true });
+    video.addEventListener("error", onError, { once: true });
+  });
+}
+
+async function startCamera() {
+  if (cameraStarting || cameraStream) return;
+
+  cameraStarting = true;
+  startButton.disabled = true;
+  startButton.textContent = "Opening camera…";
+
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Use localhost or HTTPS to access the camera.");
+    }
+
+    if (
+      typeof Hands === "undefined" ||
+      typeof drawConnectors === "undefined" ||
+      typeof drawLandmarks === "undefined"
+    ) {
+      throw new Error("MediaPipe did not load. Check your internet connection and reload.");
+    }
+
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user" },
+      audio: false
+    });
+
+    video.srcObject = cameraStream;
+    await video.play();
+    await waitForVideo();
+
+    cameraMessage.style.display = "none";
+    canvas.style.display = "block";
+    startButton.hidden = true;
+    stopButton.hidden = false;
+
+    if (!handTracker) {
+      handTracker = new Hands({
+        locateFile: file =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+      });
+
+      handTracker.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.5
+      });
+
+      handTracker.onResults(handleHandResults);
+    }
+
+    trackingActive = true;
+    trackingSession++;
+    lastHandFrame = 0;
+    nextRetryTime = 0;
+    hasReceivedPrediction = false;
+    lastSuccessfulPrediction = "";
+
+    handStatus.textContent = "AI vision active — show a hand sign.";
+    predictionResult.textContent = "Waiting for a hand sign…";
+
+    const thisSession = trackingSession;
+    animationFrameId = requestAnimationFrame(
+      () => processFrame(thisSession)
+    );
+
+  } catch (error) {
+    console.error("VOICEBACK camera error:", error);
+    stopCamera();
+
+    cameraMessage.style.display = "block";
+    cameraMessage.replaceChildren();
+
+    const symbol = document.createElement("div");
+    symbol.className = "camera-symbol";
+    symbol.textContent = "⚠️";
+
+    const title = document.createElement("div");
+    title.className = "camera-title";
+    title.textContent = "Could not start the camera";
+
+    const detail = document.createElement("p");
+    detail.className = "muted";
+    detail.textContent = error.message;
+
+    cameraMessage.append(symbol, title, detail);
+
+  } finally {
+    cameraStarting = false;
+    startButton.disabled = false;
+    startButton.textContent = "▶ Start camera";
+  }
+}
+
+function stopCamera() {
+  trackingActive = false;
+  trackingSession++;
+
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+
+  if (activeController) {
+    activeController.abort();
+    activeController = null;
+  }
+
+  activeRequestId = null;
+  predictionInProgress = false;
+  processingFrame = false;
+
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+
+  video.srcObject = null;
+  canvas.style.display = "none";
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  cameraMessage.style.display = "block";
+  cameraMessage.replaceChildren();
+
+  const symbol = document.createElement("div");
+  symbol.className = "camera-symbol";
+  symbol.textContent = "📷";
+
+  const title = document.createElement("div");
+  title.className = "camera-title";
+  title.textContent = "Camera stopped";
+
+  const detail = document.createElement("p");
+  detail.className = "muted";
+  detail.textContent = "Start it when you’re ready.";
+
+  cameraMessage.append(symbol, title, detail);
+
+  handStatus.textContent = "AI vision is waiting for the camera…";
+  predictionResult.textContent = "Waiting for a hand sign…";
+
+  startButton.hidden = false;
+  stopButton.hidden = true;
+}
+
+window.addEventListener("pagehide", stopCamera);
+
+async function processFrame(session) {
+  if (!trackingActive || session !== trackingSession) return;
+
+  const now = performance.now();
+
+  if (
+    video.readyState >= 2 &&
+    !processingFrame &&
+    now - lastHandFrame >= 100
+  ) {
+    processingFrame = true;
+    lastHandFrame = now;
+
+    try {
+      await handTracker.send({ image: video });
+    } catch (error) {
+      console.error("VOICEBACK hand tracking error:", error);
+
+      if (trackingActive && session === trackingSession) {
+        handStatus.textContent =
+          "Hand tracking error. Check the Console and internet connection.";
+      }
+    } finally {
+      processingFrame = false;
+    }
+  }
+
+  if (trackingActive && session === trackingSession) {
+    animationFrameId = requestAnimationFrame(
+      () => processFrame(session)
+    );
+  }
+}
+
+function handleHandResults(results) {
+  if (!trackingActive || !video.videoWidth || !video.videoHeight) return;
+
+  const hands = results.multiHandLandmarks || [];
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  for (const hand of hands) {
+    drawConnectors(ctx, hand, HAND_CONNECTIONS, {
+      color: "#67e8f9",
+      lineWidth: 4
+    });
+
+    drawLandmarks(ctx, hand, {
+      color: "#ffffff",
+      fillColor: "#06b6d4",
+      lineWidth: 2,
+      radius: 4
+    });
+  }
+
+  ctx.restore();
+
+  if (hands.length === 0) {
+    handStatus.textContent = "AI VISION ACTIVE — Show a hand to the camera.";
+
+    if (!hasReceivedPrediction) {
+      predictionResult.textContent = "Waiting for a hand sign…";
+    }
+
+    return;
+  }
+
+  handStatus.textContent = hands.length === 2
+    ? "2 HANDS DETECTED — AI classifies the first hand only."
+    : "HAND DETECTED — VOICEBACK AI ACTIVE!";
+
+  if (!hasReceivedPrediction && !predictionInProgress) {
+    predictionResult.textContent = "Recognising sign… Hold your hand steady.";
+  }
+
+  void sendLandmarksToAI(hands[0]);
+}
+
+async function sendLandmarksToAI(hand) {
+  const now = performance.now();
+
+  if (
+    !trackingActive ||
+    predictionInProgress ||
+    now < nextRetryTime ||
+    now - lastPredictionRequest < REQUEST_INTERVAL_MS
+  ) {
+    return;
+  }
+
+  const coordinates = hand.flatMap(point => [
+    point.x,
+    point.y,
+    point.z
+  ]);
+
+  if (
+    coordinates.length !== 63 ||
+    coordinates.some(value => !Number.isFinite(value))
+  ) {
+    console.error("Invalid hand landmarks.");
+    return;
+  }
+
+  lastPredictionRequest = now;
+  predictionInProgress = true;
+
+  const requestId = ++requestCounter;
+  activeRequestId = requestId;
+
+  const controller = new AbortController();
+  activeController = controller;
+
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS
+  );
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ landmarks: coordinates }),
+      signal: controller.signal
+    });
+
+    let result;
+
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error("The server returned an invalid JSON response.");
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        result.error || `AI server returned HTTP ${response.status}.`
+      );
+    }
+
+    if (!result || typeof result.prediction !== "string") {
+      throw new Error("The server response has no prediction label.");
+    }
+
+    if (!trackingActive || activeRequestId !== requestId) return;
+
+    const rawConfidence = Number(result.confidence);
+    let confidencePercent = null;
+
+    if (Number.isFinite(rawConfidence)) {
+      confidencePercent = rawConfidence <= 1
+        ? rawConfidence * 100
+        : rawConfidence;
+    }
+
+    predictionResult.textContent = confidencePercent === null
+      ? `AI prediction: ${result.prediction}`
+      : `AI prediction: ${result.prediction} (${confidencePercent.toFixed(1)}% model confidence)`;
+
+    hasReceivedPrediction = true;
+    lastSuccessfulPrediction = result.prediction;
+
+    speakPrediction(result.prediction);
+
+    console.log("VOICEBACK prediction:", result);
+
+  } catch (error) {
+    if (!trackingActive || activeRequestId !== requestId) return;
+
+    console.error("VOICEBACK prediction error:", error);
+
+    predictionResult.textContent = error.name === "AbortError"
+      ? "AI server took too long to respond. Retrying…"
+      : "Prediction connection failed. Check that app.py is running on port 5000.";
+
+    nextRetryTime = performance.now() + RETRY_DELAY_MS;
+
+  } finally {
+    clearTimeout(timeoutId);
+
+    if (activeRequestId === requestId) {
+      activeRequestId = null;
+      activeController = null;
+      predictionInProgress = false;
+    }
+  }
+}
+</script>
+
+</body>
+</html>
